@@ -1,0 +1,20 @@
+{
+  "name": "beangle-kiosk",
+  "version": "0.0.1",
+  "description": "Kiosk for web page",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package":"electron-packager . kiosk --platform=win32 --arch=x64 --icon=icon.ico --out=./out --asar --app-version=0.0.1 --overwrite --prune"
+  },
+  "repository": "https://github.com/beangle/kiosk",
+  "keywords": [
+    "Electron",
+    "Kiosk"
+  ],
+  "author": "Duan Tihua",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "electron": "^7.1.4"
+  }
+}
