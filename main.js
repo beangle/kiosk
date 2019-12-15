@@ -1,48 +1,88 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const {app, BrowserWindow,ipcMain} = require('electron')
 const path = require('path')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+let win
 let homeURL
+let errorStatus="initializing..."
+let refreshInterval=15*1000;
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({
+  win = new BrowserWindow({
     width: 800,
     height: 600,
     frame:false, //没有边框，没有标题栏，没有菜单
     kiosk: true,  //服务亭模式
     fullscreen: true,  //全屏窗口
+    autoHideMenuBar:true,//自动隐藏菜单
+    alwaysOnTop:true,
     backgroundColor: '#fff',
     resizable: false,  //不可更改窗口尺寸
     maximizable: true, //支持最大化
-    autoHideMenuBar:true,//自动隐藏菜单
+
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      devTools :false,
+      nodeIntegration: false  //不要启用node集成，防止加载未知代码对本地的潜在危险
     }
   })
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
-    mainWindow = null
+  win.on('closed', function () {
+    win = null;
   })
 
-  // 禁用缩放
-  let webContents = mainWindow.webContents;
-  webContents.on('did-finish-load', () => {
-    webContents.zoomFactor=1;
-    webContents.setVisualZoomLevelLimits(1, 1);
-    webContents.setLayoutZoomLevelLimits(0, 0);
+  //不允许失去焦点，一旦失去马上夺回
+  win.on('blur', () => {
+    win.restore();
+    win.focus();
+    win.setKiosk(true);
   });
 
-  //加载地址
+  // 禁用缩放
+  let contents = win.webContents;
+  contents.on('did-finish-load', (e) => {
+    contents.zoomFactor = 1;
+    contents.setVisualZoomLevelLimits(1, 1);
+    contents.setLayoutZoomLevelLimits(0, 0);
+  });
+
+  contents.on('did-fail-load', (e,errorCode,errorDescription,validatedURL,isMainFrame) => {
+    if(isMainFrame){
+      win.loadFile('error.html');
+      errorStatus ="Loading error:"+validatedURL +";Cause:"+errorDescription+"("+errorCode+")";
+      console.log(errorStatus);
+    }
+  });
+
+  // 如果询问状态则返回，5秒后重新打开首页
+  ipcMain.on('status', (event, arg) => {
+    event.returnValue = errorStatus
+    if(errorStatus){
+      errorStatus = "";
+      setTimeout(loadHome,5000);
+    }
+  });
+
+  loadHome();
+}
+
+//加载首页地址
+function loadHome(){
   if(homeURL){
-    mainWindow.loadURL(homeURL);
+    win.loadURL(homeURL);
   }
 }
 
+//检查是否全屏
+function checkStatus(){
+   if(!win.isFullScreen()){
+     win.setFullScreen(true)
+   }
+}
 
 if(process.argv.length<2){
    console.log('Usage:spa.exe url');
@@ -74,8 +114,8 @@ app.on('window-all-closed', function () {
 app.on('activate', function () {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) createWindow()
+  if (win === null) createWindow()
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+//定期检查全屏
+setInterval(checkStatus,refreshInterval);
