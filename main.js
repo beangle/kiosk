@@ -10,7 +10,6 @@ let errorStatus="initializing..."
 let refreshInterval=15*1000;
 let devMode=false
 
-
 // 解析HomeURL和是否开发模式
 if(process.argv.length<2){
    console.log('Usage:spa.exe url');
@@ -21,14 +20,13 @@ if(process.argv.length<2){
     argStartIndex=2;
   }
   process.argv.slice(argStartIndex).forEach(function(val,index, array) {
-    if(index==0){
-      homeURL = val;
-    }else if(index==1){
-      devMode=new Boolean(val)
-    }
+      if("dev"==val){
+        devMode=new Boolean(val)
+      }else if(val.startsWith("http")){
+        homeURL = val;
+      }
   });
 }
-
 
 function createWindow () {
   // Create the browser window.
@@ -144,4 +142,6 @@ app.on('activate', function () {
 })
 
 //定期检查全屏
-setInterval(checkStatus,refreshInterval);
+if(!devMode){
+  setInterval(checkStatus,refreshInterval);
+}
