@@ -6,6 +6,7 @@ const path = require('path')
 // be closed automatically when the JavaScript object is garbage collected.
 let win
 let homeURL
+let baseURL
 let errorStatus="initializing..."
 let refreshInterval=15*1000;
 let devMode=false
@@ -24,8 +25,19 @@ if(process.argv.length<2){
         devMode=new Boolean(val)
       }else if(val.startsWith("http")){
         homeURL = val;
+        baseURL = getBase(homeURL);
       }
   });
+}
+
+function getBase(url){
+  let firstSlashIdx=url.indexOf("://")+3;
+  let urlAfterHttp=url.substring(firstSlashIdx);
+  let lastSlashIdx=urlAfterHttp.lastIndexOf("/");
+  if(lastSlashIdx<0){
+    lastSlashIdx=urlAfterHttp.length;
+  }
+  return url.substring(0,firstSlashIdx+lastSlashIdx);
 }
 
 function createWindow () {
@@ -36,6 +48,7 @@ function createWindow () {
     backgroundColor: '#fff',
     resizable: false,  //不可更改窗口尺寸
     maximizable: true, //支持最大化
+    kiosk:true,
     frame:devMode, //没有边框，没有标题栏，没有菜单
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -56,7 +69,6 @@ function createWindow () {
       win.focus();
       win.setKiosk(true);
     });
-    win.setKiosk(true);//服务亭模式
     win.setFullScreen(true);//全屏窗口
     win.autoHideMenuBar=true;//自动隐藏菜单
   }
@@ -69,15 +81,16 @@ function createWindow () {
     contents.setLayoutZoomLevelLimits(0, 0);
   });
 
-  //链接不上时，显示出错界面，有错误界面调用刷新逻辑
+  //链接不上时，显示出错界面，由错误界面调用刷新逻辑
   contents.on('did-fail-load', (e,errorCode,errorDescription,validatedURL,isMainFrame) => {
     if(isMainFrame){
       displayError("Loading error:"+validatedURL +";Cause:"+errorDescription+"("+errorCode+")")
     }
   });
 
+  //http状态不对也显示错误界面
   contents.session.webRequest.onHeadersReceived({urls:[]},(details,callback)=>{
-    if(details.resourceType == "mainFrame" && details.statusCode != 200){
+    if(details.resourceType == "mainFrame" && details.statusCode != 200 && details.statusCode != 302 && details.statusCode != 301){
        displayError("Loading error:"+details.url +";Status:"+details.statusCode)
     }
     callback(details);
@@ -119,10 +132,37 @@ function loadHome(){
   }
 }
 
-//检查是否全屏
+/**
+ * 检查kiosk状态
+ * 1. 是否全屏
+ * 2. 当前窗口是baseURL
+ * 3. 是否只有一个窗口
+ */
 function checkStatus(){
    if(!win.isFullScreen()){
      win.setFullScreen(true)
+   }
+   if(!win.isFocused()){
+     win.focus();
+   }
+
+   if(baseURL !=  getBase(win.webContents.getURL())){
+      console.log(baseURL)
+      console.log("Incorrect url:"+getBase(win.webContents.getURL()));
+      loadHome();
+   }
+
+   let wins=BrowserWindow.getAllWindows();
+   if(wins.length>1){
+     try{
+       console.log("Closing "+(wins.length - 1)+" windows");
+       for(w of wins){
+         if(w != win){
+           w.close();
+         }
+       }
+     }catch(e){
+     }
    }
 }
 
