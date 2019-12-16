@@ -146,14 +146,13 @@ function checkStatus(){
      win.focus();
    }
 
-   if(baseURL !=  getBase(win.webContents.getURL())){
-      console.log(baseURL)
+   if(!win.webContents.getURL().startsWith(baseURL)){
       console.log("Incorrect url:"+getBase(win.webContents.getURL()));
       loadHome();
    }
 
-   let wins=BrowserWindow.getAllWindows();
-   if(wins.length>1){
+   let wins = BrowserWindow.getAllWindows();
+   if(wins.length > 1){
      try{
        console.log("Closing "+(wins.length - 1)+" windows");
        for(w of wins){
