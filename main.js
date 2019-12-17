@@ -13,7 +13,7 @@ let devMode=false
 
 // 解析HomeURL和是否开发模式
 if(process.argv.length<2){
-   console.log('Usage:spa.exe url');
+   console.log('Usage:kiosk.exe [dev] url');
    app.quit();
 }else{
   let argStartIndex=1;
