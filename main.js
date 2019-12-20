@@ -8,7 +8,7 @@ let win
 let homeURL
 let baseURL
 let errorStatus="initializing..."
-let refreshInterval=15*1000;
+let refreshInterval=60*1000;
 let devMode=false
 
 // 解析HomeURL和是否开发模式
@@ -49,6 +49,7 @@ function createWindow () {
     resizable: false,  //不可更改窗口尺寸
     maximizable: true, //支持最大化
     kiosk:true,
+    alwaysOnTop :!devMode,
     frame:devMode, //没有边框，没有标题栏，没有菜单
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -63,12 +64,12 @@ function createWindow () {
   })
 
   if(!devMode){
-    //不允许失去焦点，一旦失去马上夺回
-    win.on('blur', () => {
+    //不允许失去焦点，一旦失去马上夺回 (不要启用，目前和alert有冲突)
+    /*win.on('blur', () => {
       win.restore();
       win.focus();
       win.setKiosk(true);
-    });
+    });*/
     win.setFullScreen(true);//全屏窗口
     win.autoHideMenuBar=true;//自动隐藏菜单
   }
