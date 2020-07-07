@@ -15,6 +15,6 @@
   "author": "Duan Tihua",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "electron": "^7.1.5"
+    "electron": "^7.2.4"
   }
 }
