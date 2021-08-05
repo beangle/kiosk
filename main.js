@@ -8,7 +8,8 @@ let win
 let homeURL
 let baseURL
 let errorStatus="initializing..."
-let refreshInterval=60*1000;
+//check window status and url
+let refreshInterval=120*1000;
 let devMode=false
 
 // 解析HomeURL和是否开发模式
@@ -79,7 +80,6 @@ function createWindow () {
   contents.on('did-finish-load', (e) => {
     contents.zoomFactor = 1;
     contents.setVisualZoomLevelLimits(1, 1);
-    contents.setLayoutZoomLevelLimits(0, 0);
   });
 
   //链接不上时，显示出错界面，由错误界面调用刷新逻辑
