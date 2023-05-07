@@ -15,7 +15,7 @@
   "author": "Duan Tihua",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "electron": "^13.1.8",
-    "electron-packager": "^15.3.0"
+    "electron": "^24.2.0",
+    "electron-packager": "^17.1.1"
   }
 }
